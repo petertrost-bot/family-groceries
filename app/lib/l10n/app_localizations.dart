@@ -927,6 +927,156 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Brauchen wir wieder?'**
   String get dueSuggestions;
+
+  /// Settings section header and list menu entry for account export and deletion.
+  ///
+  /// In de, this message translates to:
+  /// **'Konto'**
+  String get account;
+
+  /// No description provided for @accountExport.
+  ///
+  /// In de, this message translates to:
+  /// **'Meine Daten exportieren'**
+  String get accountExport;
+
+  /// No description provided for @accountExportBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Alles, was über dich gespeichert ist, als JSON-Datei.'**
+  String get accountExportBody;
+
+  /// No description provided for @accountDelete.
+  ///
+  /// In de, this message translates to:
+  /// **'Konto löschen'**
+  String get accountDelete;
+
+  /// No description provided for @accountDeleteTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Konto löschen?'**
+  String get accountDeleteTitle;
+
+  /// No description provided for @accountDeleteWhat.
+  ///
+  /// In de, this message translates to:
+  /// **'Dein Konto, dein Profil, deine Zugangs-Tokens und deine verbundenen Apps werden endgültig gelöscht. Das lässt sich nicht rückgängig machen.'**
+  String get accountDeleteWhat;
+
+  /// No description provided for @accountDeleteKept.
+  ///
+  /// In de, this message translates to:
+  /// **'Der Haushalt „{household}“ bleibt für {names} mit der ganzen Liste erhalten. Deine Einträge bleiben dort, aber ohne deinen Namen.'**
+  String accountDeleteKept(String household, String names);
+
+  /// No description provided for @accountDeleteKeptUnnamed.
+  ///
+  /// In de, this message translates to:
+  /// **'Der Haushalt „{household}“ bleibt für die anderen Mitglieder mit der ganzen Liste erhalten. Deine Einträge bleiben dort, aber ohne deinen Namen.'**
+  String accountDeleteKeptUnnamed(String household);
+
+  /// Joins the last two names of a list, e.g. 'Lea und Max'.
+  ///
+  /// In de, this message translates to:
+  /// **'{first} und {last}'**
+  String namesAnd(String first, String last);
+
+  /// No description provided for @accountDeleteDeleted.
+  ///
+  /// In de, this message translates to:
+  /// **'Du bist das letzte Mitglied. Deshalb wird der Haushalt „{household}“ mit Liste, Verlauf, Kategorien und Geschäften gelöscht.'**
+  String accountDeleteDeleted(String household);
+
+  /// No description provided for @accountDeleteNone.
+  ///
+  /// In de, this message translates to:
+  /// **'Du bist in keinem Haushalt, geteilte Daten gibt es nicht.'**
+  String get accountDeleteNone;
+
+  /// No description provided for @accountDeleteExportHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Mit „Meine Daten exportieren“ in den Einstellungen kannst du vorher eine Kopie sichern.'**
+  String get accountDeleteExportHint;
+
+  /// No description provided for @accountDeleteConfirmLabel.
+  ///
+  /// In de, this message translates to:
+  /// **'Zum Bestätigen LÖSCHEN eingeben'**
+  String get accountDeleteConfirmLabel;
+
+  /// No description provided for @accountDeleteConfirm.
+  ///
+  /// In de, this message translates to:
+  /// **'Endgültig löschen'**
+  String get accountDeleteConfirm;
+
+  /// No description provided for @accountDeleteOffline.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Internetverbindung. Dein Konto wurde nicht gelöscht. Versuche es erneut, sobald du online bist.'**
+  String get accountDeleteOffline;
+
+  /// No description provided for @accountDeleteFailed.
+  ///
+  /// In de, this message translates to:
+  /// **'Löschen fehlgeschlagen ({code}). Dein Konto wurde nicht gelöscht.'**
+  String accountDeleteFailed(String code);
+
+  /// No description provided for @accountDeleteCanceled.
+  ///
+  /// In de, this message translates to:
+  /// **'Abgebrochen. Dein Konto wurde nicht gelöscht.'**
+  String get accountDeleteCanceled;
+
+  /// No description provided for @accountFateOffline.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Internetverbindung. Was mit deinem Haushalt passiert, konnte nicht geladen werden.'**
+  String get accountFateOffline;
+
+  /// No description provided for @accountFateFailed.
+  ///
+  /// In de, this message translates to:
+  /// **'Was mit deinem Haushalt passiert, konnte nicht geladen werden ({code}).'**
+  String accountFateFailed(String code);
+
+  /// No description provided for @accountDeletedNotice.
+  ///
+  /// In de, this message translates to:
+  /// **'Dein Konto wurde gelöscht.'**
+  String get accountDeletedNotice;
+
+  /// No description provided for @accountDeletedApple.
+  ///
+  /// In de, this message translates to:
+  /// **'Falls du dich mit Apple angemeldet hattest: Entferne „Einkauf“ auf deinem iPhone unter Einstellungen › [dein Name] › Anmelden & Sicherheit › Mit Apple anmelden.'**
+  String get accountDeletedApple;
+
+  /// No description provided for @exportDone.
+  ///
+  /// In de, this message translates to:
+  /// **'Daten exportiert'**
+  String get exportDone;
+
+  /// No description provided for @exportDoneAt.
+  ///
+  /// In de, this message translates to:
+  /// **'Daten exportiert: {path}'**
+  String exportDoneAt(String path);
+
+  /// No description provided for @exportOffline.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Internetverbindung. Deine Daten wurden nicht exportiert.'**
+  String get exportOffline;
+
+  /// No description provided for @exportFailed.
+  ///
+  /// In de, this message translates to:
+  /// **'Export fehlgeschlagen ({code}).'**
+  String exportFailed(String code);
 }
 
 class _AppLocalizationsDelegate

@@ -13,6 +13,7 @@ class FakeAuth() extends Fake implements GoTrueClient {
   final states = StreamController<AuthState>.broadcast();
   final idTokenCalls = <IdTokenCall>[];
   final metadataUpdates = <Map<String, Object?>>[];
+  final signOutScopes = <SignOutScope>[];
   Exception? idTokenError;
   User? user;
 
@@ -37,6 +38,14 @@ class FakeAuth() extends Fake implements GoTrueClient {
     }
     idTokenCalls.add((provider: provider, idToken: idToken, nonce: nonce));
     return AuthResponse();
+  }
+
+  /// Clears the session and tells listeners, as GoTrue does.
+  @override
+  Future<void> signOut({SignOutScope scope = SignOutScope.local}) async {
+    signOutScopes.add(scope);
+    user = null;
+    states.add(const AuthState(AuthChangeEvent.signedOut, null));
   }
 
   @override

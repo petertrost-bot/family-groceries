@@ -11,10 +11,22 @@ sealed class const Session();
 
 final class const SessionLoading() extends Session;
 
-final class const SignedOut([
+final class const SignedOut({
   /// Why the last sign-in failed, e.g. an error on a provider's return URL.
   final Exception? error,
-]) extends Session;
+
+  /// Set when the user just deleted their account, for the start screen's
+  /// confirmation.
+  final AccountDeletedNotice? deleted,
+}) extends Session;
+
+/// The confirmation after an account deletion.
+@immutable
+class const AccountDeletedNotice({
+  /// Apple's grant was not revoked, so the user removes the app from their
+  /// Apple account themselves.
+  required final bool removeAppleManually,
+});
 
 final class const NeedsHousehold(final String userId) extends Session;
 
@@ -51,7 +63,7 @@ class SessionCubit(final SupabaseClient _client, final SessionCache _cache)
         AuthRetryableFetchException() => unawaited(
           _load(_client.auth.currentUser?.id),
         ),
-        _ => emit(SignedOut(e is Exception ? e : null)),
+        _ => emit(SignedOut(error: e is Exception ? e : null)),
       },
     );
   }
@@ -66,7 +78,15 @@ class SessionCubit(final SupabaseClient _client, final SessionCache _cache)
     if (userId == null) {
       _loadedFor = null;
       _retry?.cancel();
-      emit(const SignedOut());
+      // The sign-out that [accountDeleted] causes keeps its notice.
+      emit(
+        SignedOut(
+          deleted: switch (state) {
+            SignedOut(:final deleted) => deleted,
+            _ => null,
+          },
+        ),
+      );
       await _cache.forget();
       return;
     }
@@ -125,6 +145,21 @@ class SessionCubit(final SupabaseClient _client, final SessionCache _cache)
   Future<void> join(String code) => _rpc('join_household', {'p_code': code});
 
   Future<void> signOut() => _client.auth.signOut();
+
+  /// The server already deleted the account and its sessions: signs out on
+  /// this device only and drops everything cached.
+  Future<void> accountDeleted(AccountDeletedNotice notice) async {
+    _loadedFor = null;
+    _retry?.cancel();
+    emit(SignedOut(deleted: notice));
+    await _cache.forget();
+    try {
+      // GoTrue's default scope is this device only.
+      await _client.auth.signOut();
+    } on Object {
+      // Local sign-out only clears storage; the account is gone regardless.
+    }
+  }
 
   Future<void> _rpc(String fn, Map<String, Object?> params) async {
     try {

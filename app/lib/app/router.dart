@@ -82,7 +82,12 @@ GoRouter buildRouter(SessionCubit session) => GoRouter(
         authorizationId: state.uri.queryParameters['authorization_id'],
       ),
     ),
-    GoRoute(path: settingsPath, builder: (_, _) => const SettingsScreen()),
+    GoRoute(
+      path: settingsPath,
+      builder: (_, state) => SettingsScreen(
+        showAccount: state.uri.queryParameters['section'] == 'account',
+      ),
+    ),
     GoRoute(
       path: '/join/:code',
       builder: (_, state) => JoinScreen(code: state.pathParameters['code']!),

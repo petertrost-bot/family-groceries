@@ -3,6 +3,7 @@ import 'package:family_groceries/app/router.dart';
 import 'package:family_groceries/l10n/app_localizations.dart';
 import 'package:family_groceries/session/session_cubit.dart';
 import 'package:family_groceries/session/social_sign_in.dart';
+import 'package:family_groceries/settings/account_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +12,7 @@ class const App({
   required final SessionCubit session,
   required final SocialSignIn social,
   required final DeviceCache cache,
+  required final AccountRepository account,
   super.key,
 }) extends StatefulWidget {
   @override
@@ -33,6 +35,7 @@ class _AppState() extends State<App> {
       providers: [
         RepositoryProvider.value(value: widget.social),
         RepositoryProvider.value(value: widget.cache),
+        RepositoryProvider.value(value: widget.account),
       ],
       child: BlocProvider.value(
         value: widget.session,

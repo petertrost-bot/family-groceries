@@ -4,6 +4,7 @@ import 'package:family_groceries/app/environment.dart';
 import 'package:family_groceries/session/plugin_sign_in.dart';
 import 'package:family_groceries/session/session_cubit.dart';
 import 'package:family_groceries/session/social_sign_in.dart';
+import 'package:family_groceries/settings/account_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
@@ -47,7 +48,20 @@ Future<void> main() async {
     ),
   );
   final cache = DeviceCache(SharedPreferencesAsync());
+  final account = SupabaseAccountRepository(
+    client,
+    // Only iOS has Apple's own dialog; elsewhere the server answers
+    // `manual` and the user unlinks the app on their iPhone.
+    appleCode: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+        ? appleAuthorizationCode
+        : null,
+  );
   runApp(
-    App(session: SessionCubit(client, cache), social: social, cache: cache),
+    App(
+      session: SessionCubit(client, cache),
+      social: social,
+      cache: cache,
+      account: account,
+    ),
   );
 }

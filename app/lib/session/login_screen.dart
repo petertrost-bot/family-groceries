@@ -22,12 +22,35 @@ class const LoginScreen({
   @override
   Widget build(BuildContext context) {
     final invite = this.invite;
+    final l10n = AppLocalizations.of(context);
+    final deleted = switch (context.watch<SessionCubit>().state) {
+      SignedOut(:final deleted) => deleted,
+      _ => null,
+    };
+    final panel = SignInPanel(
+      returnPath: next ?? (invite == null ? '/' : '/join/$invite'),
+    );
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context).signInTitle)),
-      body: Center(
-        child: SignInPanel(
-          returnPath: next ?? (invite == null ? '/' : '/join/$invite'),
-        ),
+      appBar: AppBar(title: Text(l10n.signInTitle)),
+      body: Column(
+        children: [
+          if (deleted != null)
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Card(
+                key: const ValueKey('account-deleted-notice'),
+                margin: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                child: ListTile(
+                  leading: const Icon(Icons.check_circle_outline),
+                  title: Text(l10n.accountDeletedNotice),
+                  subtitle: deleted.removeAppleManually
+                      ? Text(l10n.accountDeletedApple)
+                      : null,
+                ),
+              ),
+            ),
+          Expanded(child: Center(child: panel)),
+        ],
       ),
     );
   }

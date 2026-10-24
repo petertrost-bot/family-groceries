@@ -536,4 +536,104 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get dueSuggestions => 'Brauchen wir wieder?';
+
+  @override
+  String get account => 'Konto';
+
+  @override
+  String get accountExport => 'Meine Daten exportieren';
+
+  @override
+  String get accountExportBody =>
+      'Alles, was über dich gespeichert ist, als JSON-Datei.';
+
+  @override
+  String get accountDelete => 'Konto löschen';
+
+  @override
+  String get accountDeleteTitle => 'Konto löschen?';
+
+  @override
+  String get accountDeleteWhat =>
+      'Dein Konto, dein Profil, deine Zugangs-Tokens und deine verbundenen Apps werden endgültig gelöscht. Das lässt sich nicht rückgängig machen.';
+
+  @override
+  String accountDeleteKept(String household, String names) {
+    return 'Der Haushalt „$household“ bleibt für $names mit der ganzen Liste erhalten. Deine Einträge bleiben dort, aber ohne deinen Namen.';
+  }
+
+  @override
+  String accountDeleteKeptUnnamed(String household) {
+    return 'Der Haushalt „$household“ bleibt für die anderen Mitglieder mit der ganzen Liste erhalten. Deine Einträge bleiben dort, aber ohne deinen Namen.';
+  }
+
+  @override
+  String namesAnd(String first, String last) {
+    return '$first und $last';
+  }
+
+  @override
+  String accountDeleteDeleted(String household) {
+    return 'Du bist das letzte Mitglied. Deshalb wird der Haushalt „$household“ mit Liste, Verlauf, Kategorien und Geschäften gelöscht.';
+  }
+
+  @override
+  String get accountDeleteNone =>
+      'Du bist in keinem Haushalt, geteilte Daten gibt es nicht.';
+
+  @override
+  String get accountDeleteExportHint =>
+      'Mit „Meine Daten exportieren“ in den Einstellungen kannst du vorher eine Kopie sichern.';
+
+  @override
+  String get accountDeleteConfirmLabel => 'Zum Bestätigen LÖSCHEN eingeben';
+
+  @override
+  String get accountDeleteConfirm => 'Endgültig löschen';
+
+  @override
+  String get accountDeleteOffline =>
+      'Keine Internetverbindung. Dein Konto wurde nicht gelöscht. Versuche es erneut, sobald du online bist.';
+
+  @override
+  String accountDeleteFailed(String code) {
+    return 'Löschen fehlgeschlagen ($code). Dein Konto wurde nicht gelöscht.';
+  }
+
+  @override
+  String get accountDeleteCanceled =>
+      'Abgebrochen. Dein Konto wurde nicht gelöscht.';
+
+  @override
+  String get accountFateOffline =>
+      'Keine Internetverbindung. Was mit deinem Haushalt passiert, konnte nicht geladen werden.';
+
+  @override
+  String accountFateFailed(String code) {
+    return 'Was mit deinem Haushalt passiert, konnte nicht geladen werden ($code).';
+  }
+
+  @override
+  String get accountDeletedNotice => 'Dein Konto wurde gelöscht.';
+
+  @override
+  String get accountDeletedApple =>
+      'Falls du dich mit Apple angemeldet hattest: Entferne „Einkauf“ auf deinem iPhone unter Einstellungen › [dein Name] › Anmelden & Sicherheit › Mit Apple anmelden.';
+
+  @override
+  String get exportDone => 'Daten exportiert';
+
+  @override
+  String exportDoneAt(String path) {
+    return 'Daten exportiert: $path';
+  }
+
+  @override
+  String get exportOffline =>
+      'Keine Internetverbindung. Deine Daten wurden nicht exportiert.';
+
+  @override
+  String exportFailed(String code) {
+    return 'Export fehlgeschlagen ($code).';
+  }
 }

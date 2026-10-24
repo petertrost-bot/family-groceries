@@ -79,3 +79,21 @@ class PluginSignIn({
     }
   }
 }
+
+/// A fresh Sign in with Apple authorization code, which the server trades
+/// for a token to revoke the app's grant when the account is deleted.
+/// Throws [SocialSignInCanceled] when the user backs out; any other failure
+/// returns null, and the deletion goes ahead without revoking.
+Future<String?> appleAuthorizationCode() async {
+  try {
+    final credential = await SignInWithApple.getAppleIDCredential(scopes: []);
+    return credential.authorizationCode;
+  } on SignInWithAppleAuthorizationException catch (e) {
+    if (e.code == AuthorizationErrorCode.canceled) {
+      throw const SocialSignInCanceled();
+    }
+    return null;
+  } on Exception {
+    return null;
+  }
+}

@@ -923,6 +923,7 @@ enum _MenuAction() {
   invite,
   join,
   access,
+  account,
   signOut,
 }
 
@@ -938,6 +939,7 @@ class const _Menu({required final Household household})
         _MenuAction.invite => showInviteDialog(context, household),
         _MenuAction.join => showJoinCodeDialog(context),
         _MenuAction.access => context.push(settingsPath),
+        _MenuAction.account => context.push('$settingsPath?section=account'),
         _MenuAction.signOut => context.read<SessionCubit>().signOut(),
       }),
       itemBuilder: (_) => [
@@ -954,6 +956,11 @@ class const _Menu({required final Household household})
           child: Text(l10n.joinOtherHousehold),
         ),
         PopupMenuItem(value: _MenuAction.access, child: Text(l10n.accessTitle)),
+        PopupMenuItem(
+          key: const ValueKey('menu-account'),
+          value: _MenuAction.account,
+          child: Text(l10n.account),
+        ),
         PopupMenuItem(value: _MenuAction.signOut, child: Text(l10n.signOut)),
       ],
     );

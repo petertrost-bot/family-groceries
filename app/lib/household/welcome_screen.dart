@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:family_groceries/l10n/app_localizations.dart';
 import 'package:family_groceries/session/session_cubit.dart';
+import 'package:family_groceries/settings/delete_account_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -116,6 +117,19 @@ class _WelcomeScreenState() extends State<WelcomeScreen> {
               ...hasInvite ? join : create,
               const Divider(height: 48),
               ...hasInvite ? create : join,
+              const SizedBox(height: 32),
+              Align(
+                child: TextButton(
+                  key: const ValueKey('account-delete'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                  onPressed: _busy
+                      ? null
+                      : () => unawaited(deleteAccount(context)),
+                  child: Text(l10n.accountDelete),
+                ),
+              ),
             ],
           ),
         ),

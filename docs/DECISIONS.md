@@ -630,3 +630,27 @@ Numbered 3.x so parallel jobs don't collide. Details and sources: `docs/MCP.md`.
       refreshed (`sweep.sh --print`) on purpose. Rerunning it showed
       Babytücher and "Feuchte Tücher" in Haushalt (via `tücher`) while
       Feuchttücher is Drogerie; both are now Drogerie.
+
+## Job 7b: loose ends of the Vercel hosting
+
+7b.1. **`APP_URL` lives in `app/config/auth.json`.** The phone apps' invite
+      links need the web origin. Dart no longer hardcodes it: `Environment.appUrl`
+      reads only the `APP_URL` define and is empty without it (the dialog then
+      shows only the code). Every production build already passes
+      `--dart-define-from-file=config/auth.json` (both fastlane lanes and
+      `scripts/vercel.sh`), so that file is the one source of truth; a custom
+      domain is a one-line JSON change. `auth_config_test.dart` fails when a
+      production build command drops the file (checked by removing it from a
+      Fastfile lane and from `vercel.sh`) or `APP_URL` is not an https origin.
+      Rejected: Vercel's `VERCEL_PROJECT_PRODUCTION_URL`, because the phone
+      builds don't run on Vercel and the web app links to its own origin.
+7b.2. **SPA rewrite by asset type, not by "has a dot".** The old rule
+      `/((?!.*\.\w+$).*)` 404ed deep links like `/join/AB.CD`. The rewrite now
+      skips only Flutter's asset folders (`assets/`, `canvaskit/`, `icons/`)
+      and the file extensions a Flutter web build emits, so a missing asset is
+      still a 404. `e2e/web-smoke.mjs` checks both sides.
+7b.3. **Deleted the unused repo secret `SUPABASE_DB_PASSWORD`.** Nothing read
+      it since 7.8. The value stays in `~/groceries-ops/env`, so it can be
+      set again with `gh secret set`. The remaining repo hits of the name are
+      `docs/SPEC.md` (the ops spec, copied verbatim) and past job records in
+      `docs/done/`.

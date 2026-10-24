@@ -2,11 +2,9 @@
 /// Defaults point at the production project; its URL and publishable key
 /// are public by design.
 abstract final class Environment() {
-  static const _productionSupabaseUrl =
-      'https://jdwqrallbpdbshrdhenk.supabase.co';
   static const supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
-    defaultValue: _productionSupabaseUrl,
+    defaultValue: 'https://jdwqrallbpdbshrdhenk.supabase.co',
   );
   static const supabasePublishableKey = String.fromEnvironment(
     'SUPABASE_PUBLISHABLE_KEY',
@@ -14,14 +12,8 @@ abstract final class Environment() {
   );
 
   /// Public web origin for invite links from the mobile apps; empty shows
-  /// only the code. Production builds link to the Vercel app; builds against
-  /// another project (local stack) show only the code.
-  static const appUrl = String.fromEnvironment(
-    'APP_URL',
-    defaultValue: supabaseUrl == _productionSupabaseUrl
-        ? 'https://family-groceries-pied.vercel.app'
-        : '',
-  );
+  /// only the code. Production builds take it from `config/auth.json`.
+  static const appUrl = String.fromEnvironment('APP_URL');
 
   /// Google OAuth "Web application" client ID. Supabase verifies ID tokens
   /// against it and native sign-in passes it as the server client ID; empty

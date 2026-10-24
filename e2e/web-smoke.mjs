@@ -32,7 +32,7 @@ async function head(path) {
 }
 
 const httpChecks = !process.env.SMOKE_BROWSER_ONLY;
-for (const path of httpChecks ? ['/', '/oauth/consent', '/join/ABC123', '/settings'] : []) {
+for (const path of httpChecks ? ['/', '/oauth/consent', '/join/ABC123', '/settings', '/join/AB.CD', '/lists/a.b'] : []) {
   const r = await head(path);
   check(r.status === 200 && r.type.startsWith('text/html') && r.body.includes('flutter_bootstrap.js'), `${path} serves index.html (${r.status}, ${r.type})`);
   check(/no-cache/.test(r.cache), `${path} Cache-Control: ${r.cache}`);
@@ -44,8 +44,10 @@ for (const path of httpChecks ? ['/flutter_bootstrap.js', '/flutter_service_work
 if (httpChecks) {
   const js = await head('/main.dart.js');
   check(js.status === 200 && js.type.includes('javascript') && /max-age=0/.test(js.cache), `/main.dart.js ${js.status}, ${js.type}, Cache-Control: ${js.cache}`);
-  const missing = await head('/does-not-exist.js');
-  check(missing.status === 404, `/does-not-exist.js is a 404, not index.html (${missing.status})`);
+  for (const path of ['/does-not-exist.js', '/missing.js', '/assets/x.png', '/canvaskit/missing.wasm']) {
+    const missing = await head(path);
+    check(missing.status === 404, `${path} is a 404, not index.html (${missing.status})`);
+  }
 }
 
 const browser = await chromium.launch();

@@ -44,7 +44,8 @@ PR: https://github.com/peter-trost/family-groceries/pull/1
   and working tree), Flutter (l10n check, format, analyze, test, web build),
   Deno (fmt, lint, test), pgTAP with `db lint`, and Playwright e2e on a
   local Supabase stack in CI. A `ci-ok` gate job sits on top.
-  `supabase-deploy.yml` deploys from main and skips cleanly without secrets.
+  `supabase-deploy.yml` deploys from main (since job 7 over the Management API
+  only, and it fails red without credentials).
 - **Docs.** `docs/SPEC.md`, `docs/DECISIONS.md` (22 decisions),
   `docs/NEEDS_PETER.md`, `docs/REUSED_FROM_EMOTELY.md`, `AGENTS.md` (with a
   `CLAUDE.md` symlink) and `README.md`.

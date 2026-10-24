@@ -3,7 +3,7 @@ import { expect, type Locator, type Page } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import WebSocket from 'ws';
-import { fakeOidcPort, stack } from '../stack';
+import { fakeOidcPort, localSecretKey, stack } from '../stack';
 
 export const { url: supabaseUrl, key: publishableKey, mailpit } = stack;
 export const functionsUrl = `${supabaseUrl}/functions/v1`;
@@ -111,6 +111,14 @@ export async function latestLinkFor(email: string): Promise<string> {
   throw new Error(`no magic link mail for ${email}`);
 }
 
+/** The local stack's service client, for setup no user may do (backdated history). */
+export function adminClient(): SupabaseClient {
+  return createClient(supabaseUrl, localSecretKey(), {
+    auth: { persistSession: false },
+    realtime: { transport: WebSocket as never },
+  });
+}
+
 /** A supabase-js client with no session. */
 export function anonClient(): SupabaseClient {
   return createClient(supabaseUrl, publishableKey, {
@@ -143,4 +151,21 @@ export async function viaFakeProvider(page: Page, email: string, { cancel = fals
     if (cancel) url.searchParams.set('deny', '1');
     await route.fulfill({ status: 302, headers: { location: url.href } });
   });
+}
+
+/** Cuts the page off from Supabase (HTTP and realtime); the app itself still loads. */
+export async function cutOff(page: Page): Promise<{ restore: () => Promise<void> }> {
+  let offline = true;
+  const http = `${supabaseUrl}/**`;
+  await page.route(http, (route) => route.abort());
+  await page.routeWebSocket(new RegExp(`^ws://${new URL(supabaseUrl).host}/`), (ws) => {
+    if (offline) ws.close();
+    else ws.connectToServer();
+  });
+  return {
+    restore: async () => {
+      offline = false;
+      await page.unroute(http);
+    },
+  };
 }

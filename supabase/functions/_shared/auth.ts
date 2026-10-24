@@ -6,8 +6,10 @@
 // in "Zugänge" (revokeGrant deletes its sessions) or signing out cuts access off at once instead
 // of when the access token expires.
 //   pat     - a personal access token (fgp_...), checked by hash against the database.
+// authenticateSession accepts only the app's own session token, household or not: for account
+// actions no connected app or token may take.
 import { createRemoteJWKSet, type JWTPayload, jwtVerify } from 'jose';
-import { householdOf, resolvePersonalAccessToken, sessionActive } from './db.ts';
+import { householdOf, resolvePersonalAccessToken, sessionActive, userExists } from './db.ts';
 
 export type Auth =
   & { userId: string; householdId: string }
@@ -15,16 +17,22 @@ export type Auth =
 
 export type Via = Auth['via'];
 
-export type AuthFailure = 'missing_token' | 'invalid_token' | 'no_household';
+export type AuthFailure =
+  | 'missing_token'
+  | 'invalid_token'
+  | 'no_household'
+  | 'session_required'
+  /** A genuine session token whose user has since been deleted. */
+  | 'user_deleted';
 
 export class AuthError extends Error {
   constructor(readonly reason: AuthFailure, message: string) {
     super(message);
   }
 
-  /** 401 for a missing or bad credential, 403 for a valid user without a household. */
+  /** 401 for a missing or bad credential, 403 for a valid credential that may not do this. */
   get status(): 401 | 403 {
-    return this.reason === 'no_household' ? 403 : 401;
+    return this.reason === 'no_household' || this.reason === 'session_required' ? 403 : 401;
   }
 }
 
@@ -68,9 +76,37 @@ export async function authenticate(req: Request, deps: AuthDeps = defaultDeps): 
     : { userId: claims.sub, householdId, via: 'session' };
 }
 
+export type SessionDeps = Pick<AuthDeps, 'issuer' | 'jwks' | 'sessionActive'> & {
+  userExists: (userId: string) => Promise<boolean>;
+};
+
+/** The app's own signed-in session; PATs and OAuth tokens get 403 session_required. */
+export async function authenticateSession(
+  req: Request,
+  deps: SessionDeps = defaultSessionDeps,
+): Promise<{ userId: string }> {
+  const header = req.headers.get('authorization') ?? '';
+  const match = /^Bearer\s+(\S+)\s*$/i.exec(header);
+  if (!match) throw new AuthError('missing_token', 'Authorization: Bearer <token> fehlt.');
+  const token = match[1];
+  const required = () =>
+    new AuthError('session_required', 'Nur in der App angemeldet möglich, nicht mit einem Zugang.');
+
+  if (token.startsWith(PAT_PREFIX)) throw required();
+  const claims = await verifyJwt(token, deps);
+  if (claims.client_id !== undefined) throw required();
+  if (await deps.sessionActive({ id: claims.session_id, userId: claims.sub, clientId: null })) {
+    return { userId: claims.sub };
+  }
+  if (!await deps.userExists(claims.sub)) {
+    throw new AuthError('user_deleted', 'Dieses Konto ist gelöscht.');
+  }
+  throw new AuthError('invalid_token', 'Sitzung beendet.');
+}
+
 async function verifyJwt(
   token: string,
-  deps: AuthDeps,
+  deps: Pick<AuthDeps, 'issuer' | 'jwks'>,
 ): Promise<JWTPayload & { sub: string; session_id: string }> {
   const issuer = await deps.issuer();
   try {
@@ -124,3 +160,5 @@ const defaultDeps: AuthDeps = {
   sessionActive,
   resolvePat: resolvePersonalAccessToken,
 };
+
+const defaultSessionDeps: SessionDeps = { ...defaultDeps, userExists };

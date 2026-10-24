@@ -1,6 +1,14 @@
 import { assertEquals, assertRejects } from '@std/assert';
 import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT } from 'jose';
-import { type AuthDeps, authenticate, AuthError, type AuthFailure, sha256Hex } from './auth.ts';
+import {
+  type AuthDeps,
+  authenticate,
+  authenticateSession,
+  AuthError,
+  type AuthFailure,
+  type SessionDeps,
+  sha256Hex,
+} from './auth.ts';
 
 const ISSUER = 'http://127.0.0.1:54621/auth/v1';
 const USER = '11111111-1111-1111-1111-111111111111';
@@ -26,11 +34,11 @@ const deps: AuthDeps = {
 
 function token(
   claims: Record<string, unknown> = {},
-  opts: { key?: CryptoKey; exp?: string; aud?: string; iss?: string } = {},
+  opts: { key?: CryptoKey; exp?: string; aud?: string; iss?: string; sub?: string } = {},
 ) {
   return new SignJWT({ role: 'authenticated', session_id: SESSION, ...claims })
     .setProtectedHeader({ alg: 'ES256', kid: 'k1' })
-    .setSubject(USER)
+    .setSubject(opts.sub ?? USER)
     .setIssuer(opts.iss ?? ISSUER)
     .setAudience(opts.aud ?? 'authenticated')
     .setIssuedAt()
@@ -109,4 +117,37 @@ Deno.test('a valid user without a household is refused with 403', async () => {
   );
   const error = await assertRejects(() => authenticate(req, deps), AuthError);
   assertEquals([error.reason, error.status], ['no_household', 403]);
+});
+
+const DELETED = '66666666-6666-6666-6666-666666666666';
+const sessionDeps: SessionDeps = {
+  ...deps,
+  // A deleted user's sessions are gone with them.
+  sessionActive: ({ id, userId }) => Promise.resolve(id !== ENDED && userId !== DELETED),
+  userExists: (userId) => Promise.resolve(userId !== DELETED),
+};
+
+async function sessionFailsWith(req: Request, reason: AuthFailure, status: 401 | 403) {
+  const error = await assertRejects(() => authenticateSession(req, sessionDeps), AuthError);
+  assertEquals([error.reason, error.status], [reason, status]);
+}
+
+Deno.test('authenticateSession accepts the app session, with or without a household', async () => {
+  assertEquals(await authenticateSession(bearer(await token()), sessionDeps), { userId: USER });
+  const loner = await token({}, { sub: '77777777-7777-7777-7777-777777777777' });
+  assertEquals(await authenticateSession(bearer(loner), sessionDeps), {
+    userId: '77777777-7777-7777-7777-777777777777',
+  });
+});
+
+Deno.test('authenticateSession refuses personal access tokens and OAuth apps with 403', async () => {
+  await sessionFailsWith(bearer(PAT), 'session_required', 403);
+  await sessionFailsWith(bearer(await token({ client_id: 'c-1' })), 'session_required', 403);
+});
+
+Deno.test('authenticateSession: bad, ended and deleted-user tokens', async () => {
+  await sessionFailsWith(new Request('http://local/account'), 'missing_token', 401);
+  await sessionFailsWith(bearer(await token({}, { key: other.privateKey })), 'invalid_token', 401);
+  await sessionFailsWith(bearer(await token({ session_id: ENDED })), 'invalid_token', 401);
+  await sessionFailsWith(bearer(await token({}, { sub: DELETED })), 'user_deleted', 401);
 });

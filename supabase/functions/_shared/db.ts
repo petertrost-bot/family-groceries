@@ -62,3 +62,25 @@ export async function resolvePersonalAccessToken(
     select user_id, household_id from public.authenticate_personal_access_token(${tokenHash})`;
   return row ? { userId: row.user_id, householdId: row.household_id } : null;
 }
+
+export async function userExists(userId: string): Promise<boolean> {
+  const [row] = await db()<{ exists: boolean }[]>`
+    select exists (select from auth.users where id = ${userId}::uuid) as exists`;
+  return row.exists;
+}
+
+/** The user's Sign in with Apple subject (identities.provider_id), if they linked Apple. */
+export async function appleSubject(userId: string): Promise<string | null> {
+  const [row] = await db()<{ provider_id: string }[]>`
+    select provider_id from auth.identities where user_id = ${userId}::uuid and provider = 'apple'`;
+  return row?.provider_id ?? null;
+}
+
+export type HouseholdFate = 'kept' | 'deleted' | 'none';
+
+/** Deletes the user for good; see public.delete_account. */
+export async function deleteAccount(userId: string): Promise<HouseholdFate> {
+  const [row] = await db()<{ fate: HouseholdFate }[]>`
+    select public.delete_account(${userId}::uuid) as fate`;
+  return row.fate;
+}

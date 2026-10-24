@@ -3,7 +3,7 @@
 Steps that cannot be done from the build box. Everything around them is
 implemented.
 
-## Status after job 7 (2026-10-23)
+## Status (checked 2026-10-24, job 7b)
 
 Done from the box (details in the sections below):
 
@@ -12,11 +12,11 @@ Done from the box (details in the sections below):
   enabled. The "Supabase deploy" workflow redeploys from every push to
   `main` over the Management API and fails red when a credential is
   missing (section 1).
-- Web app on Vercel, built from every push (section "Job 7: web hosting on
-  Vercel"). Site URL, redirect URLs and the OAuth consent path point at
-  it (section 2).
+- Web app on Vercel at `https://family-groceries-pied.vercel.app`, built
+  from every push (section "Job 7: web hosting on Vercel"). Site URL,
+  redirect URLs and the OAuth consent path point at it (section 2).
 - `app/config/auth.json` and `app/ios/Flutter/Auth.xcconfig` carry the real
-  client IDs (section 4, step 15).
+  client IDs and the app URL (section 4, step 15).
 
 Still yours:
 
@@ -28,9 +28,12 @@ Still yours:
   2027-04-21 at the latest).
 - Section 4, steps 16 and 18: the Xcode capability check and trying
   sign-in on your phones.
-- Optional: delete the repo secret `SUPABASE_DB_PASSWORD`; nothing reads it
-  any more.
-- Job 4: release and Siri sections, job 5: Android verification run.
+- Section 5, step 1: one MCP connect and disconnect against production.
+- "Job 4: Siri", step 2, and "Job 4: release" (not started: the repo has
+  no `release` environment yet), "Job 5: Android verification run".
+
+None of the steps below changes the hosted Site URL or removes a redirect
+URL. Only `supabase/deploy/auth_urls.ts` sets the Site URL (section 2).
 
 ## 1. Remote Supabase deploy (job 1)
 
@@ -47,31 +50,6 @@ deno run --allow-read --allow-env --allow-net --config supabase/deploy/deno.json
 supabase functions deploy --use-api --project-ref "$SUPABASE_PROJECT_REF"
 ```
 
-The original steps below are kept for reference.
-
-No `SUPABASE_ACCESS_TOKEN` was available, so migrations are not yet on
-`jdwqrallbpdbshrdhenk`. Pick one:
-
-**A. GitHub Actions (recommended).** In the repo settings, add:
-
-- Secret `SUPABASE_ACCESS_TOKEN`: a personal access token from
-  https://supabase.com/dashboard/account/tokens
-- Secret `SUPABASE_DB_PASSWORD`: the project's database password
-- Variable `SUPABASE_PROJECT_REF`: `jdwqrallbpdbshrdhenk`
-
-Then run the "Supabase deploy" workflow (Actions tab, Run workflow). It links
-the project, runs `supabase db push` and deploys the edge functions. Without
-the secrets the workflow skips and stays green.
-
-**B. From the box.** Put the two values in `~/groceries-ops/env`, then:
-
-```bash
-set -a; source ~/groceries-ops/env; set +a
-supabase link --project-ref jdwqrallbpdbshrdhenk
-supabase db push
-supabase functions deploy
-```
-
 ## 2. Auth URLs on the hosted project
 
 Done (job 7, 2026-10-23, Management API via `supabase/deploy/auth_urls.ts`):
@@ -86,30 +64,12 @@ Done (job 7, 2026-10-23, Management API via `supabase/deploy/auth_urls.ts`):
 
 To change the URL later, rerun
 `deno run --allow-env --allow-net supabase/deploy/auth_urls.ts <new-url> --preview <pattern>`
-with `SUPABASE_ACCESS_TOKEN` and `SUPABASE_PROJECT_REF` set, and update
-`appUrl` in `app/lib/app/environment.dart`. The original steps:
-
-Dashboard, Authentication, URL Configuration:
-
-- Site URL: the public web app URL once it is hosted (for example
-  `https://peter-trost.github.io/family-groceries`).
-- Redirect URLs: that URL with `/**`, plus `http://127.0.0.1:3000/**` and
-  `http://localhost:3000/**` for local web testing against the hosted project.
+with `SUPABASE_ACCESS_TOKEN` and `SUPABASE_PROJECT_REF` set, and change
+`APP_URL` in `app/config/auth.json` (the invite links of the phone apps).
 
 Magic links and sign-up confirmation mails redirect there. Email
 confirmation is on by default for hosted projects: new users confirm their
 address before the first sign-in, and the app tells them so.
-
-## 3. Web hosting (optional, free)
-
-Superseded (job 7): the web app is on Vercel; see "Job 7: web hosting on
-Vercel".
-
-The web app has no public URL yet. GitHub Pages on this public repo is free;
-say the word and a later job adds the Pages workflow (needs the SPA
-fallback: a copy of `index.html` as `404.html`).
-
-Update (job 4): the Pages workflow exists; see "Job 4: web hosting" below.
 
 ## 4. Sign in with Google and Apple (job 1b)
 
@@ -135,8 +95,8 @@ The variable names are in `.env.example`.
 5. Under **Clients → Create client → Web application**, name it
    "Einkauf Web (Supabase)". Add
    **Authorized redirect URI** `https://jdwqrallbpdbshrdhenk.supabase.co/auth/v1/callback`.
-   Once the web app is hosted, also add its origin under **Authorized
-   JavaScript origins**. Copy the **Client ID** (`GOOGLE_WEB_CLIENT_ID`) and
+   No JavaScript origin is needed: the web app signs in through Supabase's
+   redirect, which works on production (job 7). Copy the **Client ID** (`GOOGLE_WEB_CLIENT_ID`) and
    the **Client secret** (`GOOGLE_WEB_CLIENT_SECRET`, a secret).
 6. Under **Clients → Create client → iOS**, set the bundle ID to
    `com.petertrost.familygroceries`. Copy the **Client ID**
@@ -200,10 +160,8 @@ The variable names are in `.env.example`.
     expires after 6 months, and web and Android Apple sign-in stop working
     then. The script prints the expiry date. Native iOS sign-in keeps
     working without it.
-14. When the web app has a public URL (section 3), add `<url>/**` to
-    Authentication → URL Configuration → Redirect URLs. The app's deep link
-    `com.petertrost.familygroceries://login-callback` was added there on
-    2026-10-22.
+14. Done (job 7): the redirect URLs list the web app and the app's deep
+    link `com.petertrost.familygroceries://login-callback` (section 2).
 
 ### The app
 
@@ -213,7 +171,8 @@ The variable names are in `.env.example`.
     ```json
     { "GOOGLE_WEB_CLIENT_ID": "<web client id>",
       "GOOGLE_IOS_CLIENT_ID": "<ios client id>",
-      "SIGN_IN_WITH_APPLE": "true" }
+      "SIGN_IN_WITH_APPLE": "true",
+      "APP_URL": "https://family-groceries-pied.vercel.app" }
     ```
 
     In `app/ios/Flutter/Auth.xcconfig`, set `GOOGLE_REVERSED_CLIENT_ID` to
@@ -237,60 +196,25 @@ Done from the box through the Management API on 2026-10-22: OAuth 2.1 server
 enabled, dynamic client registration enabled, authorization path
 `/oauth/consent`. JWT signing already used an ES256 key (`in_use`).
 
-Still needed:
+Done since: migrations and `mcp` deployed (section 1), web app hosted and
+Site URL set (section 2); an MCP client registered by DCR reaches
+`https://family-groceries-pied.vercel.app/oauth/consent` (job 7).
 
-1. **Deploy the migrations and the `mcp` function** (section 1 above). The
-   deploy workflow and `supabase functions deploy` include `mcp`. Check
-   afterwards:
-   `curl https://jdwqrallbpdbshrdhenk.supabase.co/functions/v1/mcp/.well-known/oauth-protected-resource`
-   returns JSON with `"resource"`.
-2. **Host the web app and set the Site URL** (sections 2 and 3). The OAuth
-   server sends the browser to `<Site URL>/oauth/consent`; today that is
-   `http://localhost:3000`, so OAuth connections from Claude or ChatGPT only
-   work once the web app is public. Personal access tokens work without it.
-   If the web app is served under a sub-path (GitHub Pages:
-   `/family-groceries`), set the authorization path to
-   `/family-groceries/oauth/consent` in Dashboard → Authentication → OAuth
-   Server (or `oauth_server_authorization_path` via the API).
-   After deploying (job 3b): connect a client, then disconnect it under
-   Menü → Zugänge. Its next MCP call must get `401`. The function reads
-   `auth.sessions` through `SUPABASE_DB_URL` for this; a `500` instead
-   would mean the hosted database role lacks that read.
-3. **Optional:** if a browser-based MCP client on another site should connect,
+Still yours:
+
+1. **Connect and disconnect once** (job 3b): connect Claude or ChatGPT to
+   `https://jdwqrallbpdbshrdhenk.supabase.co/functions/v1/mcp`, then
+   disconnect it under Menü → Zugänge. Its next MCP call must get `401`.
+   The function reads `auth.sessions` through `SUPABASE_DB_URL` for this; a
+   `500` instead would mean the hosted database role lacks that read. Not
+   run on production yet: it needs your Google or Apple account.
+2. **Optional:** if a browser3. **Optional:** if a browser-based MCP client on another site should connect,
    set the edge function secret `MCP_ALLOWED_ORIGIN_HOSTS` to its hostname(s),
    comma-separated (`supabase secrets set MCP_ALLOWED_ORIGIN_HOSTS=…`).
 
-## Job 4: web hosting
-
-Superseded (job 7): GitHub Pages and `web-deploy.yml` were replaced by
-Vercel and removed.
-
-`.github/workflows/web-deploy.yml` builds the web app against the production
-project and publishes it to GitHub Pages (free for public repos), at
-`https://peter-trost.github.io/family-groceries/`. It runs only by hand and
-skips with a notice until Pages is on. The build sets the base path, so
-sign-in links, invite links and deep links (`/join/CODE`,
-`/oauth/consent`) work under `/family-groceries`.
-
-1. Repo Settings, Pages, Build and deployment, Source: **GitHub Actions**.
-2. Actions tab, **Web deploy**, Run workflow. The run prints the URL.
-3. Supabase Dashboard, Authentication, URL Configuration:
-   - Site URL: `https://peter-trost.github.io/family-groceries`
-   - Redirect URLs: add `https://peter-trost.github.io/family-groceries/**`
-4. For MCP OAuth, keep the authorization path at `/oauth/consent`
-   (Authentication, OAuth Server). Supabase appends it to the Site URL, and
-   this Site URL already ends in `/family-groceries`, so the consent page is
-   `https://peter-trost.github.io/family-groceries/oauth/consent`. Section 5,
-   step 2's sub-path variant is for a Site URL without the path; use one or
-   the other, not both.
-
-Run the workflow again after each release you want on the web; it does not
-deploy on every merge.
-
 ## Job 4: Siri
 
-1. Deploy the edge functions (section 1). The `voice` function is part of
-   `supabase functions deploy`; `supabase/config.toml` already sets
+1. Done (job 7): `voice` is deployed (section 1). `supabase/config.toml` sets
    `verify_jwt = false` for it, because Siri sends a personal access token,
    not a JWT. Check it with:
 
@@ -306,7 +230,8 @@ deploy on every merge.
 
 The Shortcut itself needs no Apple account setting, but creating the token
 needs a running app on the hosted project: the TestFlight or Play build
-(job 4 release section below) or the web app once it is hosted (section 3).
+(job 4 release section below) or the web app at
+`https://family-groceries-pied.vercel.app`.
 
 ## Job 4: release
 
@@ -473,4 +398,5 @@ push from `vercel.json`:
   Apple buttons reaching the providers' sign-in pages.
 
 Nothing is needed from you here. Optional: a custom domain (Vercel,
-Domains). If you add one, rerun `auth_urls.ts` with it and change `appUrl`.
+Domains). If you add one, rerun `auth_urls.ts` with it (section 2) and
+change `APP_URL` in `app/config/auth.json`.

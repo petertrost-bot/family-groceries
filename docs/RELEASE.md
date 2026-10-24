@@ -49,7 +49,8 @@ Values marked "variable" may also be secrets; the workflow reads either.
 The build needs no Supabase defines: `app/lib/app/environment.dart` defaults
 to the production URL and publishable key. Both lanes pass
 `--dart-define-from-file=config/auth.json`, the public Google and Apple
-sign-in client IDs (see `docs/AUTH.md`); an empty value hides that button.
+sign-in client IDs (see `docs/AUTH.md`; an empty value hides that button)
+and `APP_URL`, the web origin of invite links.
 
 ## Build numbers and versions
 

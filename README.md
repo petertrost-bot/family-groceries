@@ -34,6 +34,7 @@ Local mail (magic links) lands in Mailpit at http://127.0.0.1:54324.
 The app defaults to the hosted project `jdwqrallbpdbshrdhenk` with its public
 publishable key. Point it elsewhere with
 `--dart-define=SUPABASE_URL=... --dart-define=SUPABASE_PUBLISHABLE_KEY=...`.
-Admin credentials (`SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`) never go
-in the repo; see [`.env.example`](.env.example) and
+The admin credential `SUPABASE_ACCESS_TOKEN` never goes in the repo. The
+deploy talks only to the Management API, so it needs no database password.
+See [`.env.example`](.env.example) and
 [`docs/NEEDS_PETER.md`](docs/NEEDS_PETER.md).

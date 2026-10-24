@@ -8,6 +8,7 @@
 - Job 3b, MCP follow-ups: [docs/done/03b.md](docs/done/03b.md)
 - Job 2b, follow-ups to jobs 2 and 5 (finished and landed by 02c): [docs/done/02b.md](docs/done/02b.md)
 - Job 8, who added it, new since you looked, usuals: [docs/done/08-who-added-usuals.md](docs/done/08-who-added-usuals.md)
+- Job 4b, voice follow-ups (Linux relaunch session, on-device dictation, offline-start and social-sign-in flakes): [docs/done/04b-voice-followups.md](docs/done/04b-voice-followups.md)
 
 ## Job 1: foundation (2026-10-22)
 

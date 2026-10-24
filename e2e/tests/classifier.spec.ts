@@ -32,6 +32,10 @@ test('CLASSIFIER-LEARNING: add -> X, move -> Y, re-add -> Y, in this household o
   const { data: household } = await api.from('households').select('id').single();
   await tickBox(peter, 'Hafermilch').click();
   await expect(itemRow(peter, 'Hafermilch')).toHaveCount(0);
+  await expect.poll(async () => {
+    const { data } = await api.from('items').select('status').eq('name', 'Hafermilch');
+    return data?.map((r) => r.status);
+  }, { message: 'the tick reached the server, so add_items adds anew' }).toEqual(['bought']);
   const { data: added, error } = await api.rpc('add_items', {
     p_household: household!.id,
     p_names: ['Hafermilch', '1 Packung Kaffee'],
